@@ -22,7 +22,6 @@ app.add_url_rule('/signup', 'signup', auth.signup, methods=['POST'])
 app.add_url_rule('/checkEmail', 'checkEmail', auth.check_email, methods=['POST'])
 app.add_url_rule('/signin', 'signin', auth.signin, methods=['POST'])
 app.add_url_rule('/terms', 'Terms and Conditions', terms.terms, methods=['GET', 'POST', 'PUT', 'DELETE'])
-app.add_url_rule('/', 'check', auth.check, methods=['GET', 'POST'])
 
 if __name__ == '__main__':
     app.run(debug=True)

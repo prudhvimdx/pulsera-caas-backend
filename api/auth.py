@@ -86,16 +86,26 @@ def signin():
     req_data = request.get_json()
     if not req_data or 'email' not in req_data or 'password' not in req_data:
         return jsonify({'message': 'Please provide Credentials!'}), 400
-    user = auth_models.User.objects(email=req_data["email"], password=hash_password(req_data["password"]))
+    user_details = auth_models.User.objects(email=req_data["email"]).first
+    if user_details.login_blocked or user_details.unsuccessful_login_attempts >= 3:
+        return jsonify({'message':'Your account was blocked due to multiple unsuccessful attempts'}), 400
+    user = auth_models.User.objects(mail=req_data["email"], password=hash_password(req_data["password"]))
     if len(user):
         token = generate_token('auth', str(user[0].id))
         refresh_token = generate_token('refresh', str(user[0].id))
         return jsonify({'message': 'Login successful!', 'token': token, 'refresh_token': refresh_token}), 200
+    else:
+        user_details.unsuccessful_login_attempts = user_details.unsuccessful_login_attempts + 1
+        if user_details.unsuccessful_login_attempts == 2:
+            user_details.save()
+            return jsonify({'message': 'Authentication failed!\nYou have one more attempt left to login if you need any help please contact helpdesk.'}), 401
+        if user_details[0].unsuccessful_login_attempts >= 3:
+            user_details.login_blocked = True
+            user_details.save()
+            return jsonify({'message': 'Authentication failed!\nYou have exxceed the login unsuccessful attempts, please contact helpdesk.'}), 401
+        user_details.save()
+        return jsonify({'message': 'Authentication failed!'}), 401
 
-    return jsonify({'message': 'Authentication failed!'}), 401
 
-
-def check():
-    user_details = g.logged_in_user_details
-    return {"message": "Success", "data": {'id': str(user_details["id"])}, "status": 200}
-
+def login_history():
+    return 
